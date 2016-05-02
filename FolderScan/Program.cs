@@ -63,19 +63,39 @@ namespace FolderChangeScan
 
                     foreach (var file in allFilesList)
                     {
-                        var info = new FileInfo(file);
+                        var nextFileInfo = new FileInfo(file);
 
-                        var computedHash = md5Hasher.ComputeHash(File.ReadAllBytes(info.FullName));
+                        var computedHash = md5Hasher.ComputeHash(File.ReadAllBytes(nextFileInfo.FullName));
                         
                         stringifiedHash.Clear();
                         foreach (var t in computedHash) stringifiedHash.Append(t.ToString("x2"));
 
-                        newHashes.Add(info.FullName, stringifiedHash.ToString());
+                        newHashes.Add(nextFileInfo.FullName, stringifiedHash.ToString());
 
-                        if (oldHashes.Any() && newHashes[info.FullName] != oldHashes[info.FullName])
+                        if (oldHashes.Any())
                         {
-                            modifiedFilesList.Append(info.Name).Append(Environment.NewLine);
+                            if (oldHashes.ContainsKey(nextFileInfo.FullName))
+                            {
+                                if (newHashes.ContainsKey(nextFileInfo.FullName))
+                                {
+                                    if (newHashes[nextFileInfo.FullName] != oldHashes[nextFileInfo.FullName])
+                                    {
+                                        modifiedFilesList.Append("Updated --> ").Append(nextFileInfo.Name).Append(Environment.NewLine);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                modifiedFilesList.Append("Created --> ").Append(nextFileInfo.Name).Append(Environment.NewLine);
+                            }
+
+                            oldHashes.Remove(nextFileInfo.FullName);
                         }
+                    }
+
+                    foreach (var oldHash in oldHashes)
+                    {
+                        modifiedFilesList.Append("Deleted --> ").Append(oldHash.Key).Append(Environment.NewLine);
                     }
 
                     oldHashes = newHashes.ToDictionary(h => h.Key, h => h.Value);
