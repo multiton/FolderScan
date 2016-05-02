@@ -18,6 +18,11 @@ namespace FolderChangeScan
             var stringifiedHash = new StringBuilder();
             var selectedFolder = ConfigurationManager.AppSettings.Get("LastSelectedFolder");
 
+            if (string.IsNullOrEmpty(selectedFolder))
+            {
+                selectedFolder = "c:\\$Recycle.Bin";
+            }
+
             while (true)
             {
                 var folderBrowserDialog = new FolderBrowserDialog
