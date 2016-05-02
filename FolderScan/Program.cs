@@ -65,6 +65,15 @@ namespace FolderChangeScan
                     {
                         var nextFileInfo = new FileInfo(file);
 
+                        if (nextFileInfo.Length > Int32.MaxValue)
+                        {
+                            modifiedFilesList.Append("Skipped --> ")
+                                .Append(nextFileInfo.Name)
+                                .Append(" (too big)")
+                                .Append(Environment.NewLine);
+                            continue;
+                        }
+
                         var computedHash = md5Hasher.ComputeHash(File.ReadAllBytes(nextFileInfo.FullName));
                         
                         stringifiedHash.Clear();
