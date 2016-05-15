@@ -26,7 +26,7 @@ namespace FolderChangeScan
             while (true)
             {
                 var folderBrowserDialog = new FolderBrowserDialog
-                {
+                {                    
                     SelectedPath = selectedFolder,
                     ShowNewFolderButton = false,
                     Description = string.IsNullOrEmpty(lastError)
@@ -52,7 +52,10 @@ namespace FolderChangeScan
 
                     try
                     {
-                        allFilesList = Directory.GetFiles(folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories);
+                        // allFilesList = Directory.GetFiles(
+                        // folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories);
+                        //
+                        allFilesList = FolderList.Traverse(folderBrowserDialog.SelectedPath).ToArray();
                     }
                     catch (Exception ex)
                     {
@@ -65,6 +68,11 @@ namespace FolderChangeScan
                     {
                         var nextFileInfo = new FileInfo(file);
 
+                        if (!nextFileInfo.Exists)
+                        {
+                            continue;
+                        }
+
                         if (nextFileInfo.Length > Int32.MaxValue)
                         {
                             modifiedFilesList.Append("Skipped --> ")
@@ -74,8 +82,27 @@ namespace FolderChangeScan
                             continue;
                         }
 
-                        var computedHash = md5Hasher.ComputeHash(File.ReadAllBytes(nextFileInfo.FullName));
-                        
+                        if (nextFileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint) ||
+                            nextFileInfo.Attributes.HasFlag(FileAttributes.System))
+                        {
+                            continue;
+                        }
+
+                        byte[] computedHash;
+
+                        try
+                        {
+                            computedHash = md5Hasher.ComputeHash(File.ReadAllBytes(nextFileInfo.FullName));
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            continue;
+                        }
+                        catch (IOException)
+                        {
+                            continue;
+                        }
+                                                
                         stringifiedHash.Clear();
                         foreach (var t in computedHash) stringifiedHash.Append(t.ToString("x2"));
 
@@ -89,13 +116,13 @@ namespace FolderChangeScan
                                 {
                                     if (newHashes[nextFileInfo.FullName] != oldHashes[nextFileInfo.FullName])
                                     {
-                                        modifiedFilesList.Append("Updated --> ").Append(nextFileInfo.Name).Append(Environment.NewLine);
+                                        modifiedFilesList.Append("Updated --> ").Append(nextFileInfo.FullName).Append(Environment.NewLine);
                                     }
                                 }
                             }
                             else
                             {
-                                modifiedFilesList.Append("Created --> ").Append(nextFileInfo.Name).Append(Environment.NewLine);
+                                modifiedFilesList.Append("Created --> ").Append(nextFileInfo.FullName).Append(Environment.NewLine);
                             }
 
                             oldHashes.Remove(nextFileInfo.FullName);
