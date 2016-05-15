@@ -42,6 +42,7 @@ namespace FolderChangeScan
                 var modifiedFilesList = new StringBuilder();
 
                 var md5Hasher = MD5.Create();
+                var firstScan = true;
 
                 while (true)
                 {
@@ -127,7 +128,7 @@ namespace FolderChangeScan
                         }
                         else
                         {
-                            if (newHashes.Any())
+                            if (newHashes.Any() && !firstScan)
                             {
                                 modifiedFilesList.Append("CREATED ==> ").Append(nextFileInfo.FullName).Append(Environment.NewLine);
                             }
@@ -150,6 +151,8 @@ namespace FolderChangeScan
                         modifiedFilesList.ToString(), allFilesList.Length + " files found in " + folderBrowserDialog.SelectedPath,
                         MessageBoxButtons.OKCancel, MessageBoxIcon.None, MessageBoxDefaultButton.Button1,
                         MessageBoxOptions.ServiceNotification);
+
+                    firstScan = false;
 
                     if (dialogResult == DialogResult.Cancel) break;
                 }
