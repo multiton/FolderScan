@@ -52,9 +52,7 @@ namespace FolderChangeScan
 
                     try
                     {
-                        // allFilesList = Directory.GetFiles(
-                        // folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories);
-                        //
+                        //allFilesList = Directory.GetFiles(folderBrowserDialog.SelectedPath, "*.*", SearchOption.AllDirectories);                        
                         allFilesList = FolderList.Traverse(folderBrowserDialog.SelectedPath).ToArray();
                     }
                     catch (Exception ex)
@@ -126,6 +124,13 @@ namespace FolderChangeScan
                             }
 
                             oldHashes.Remove(nextFileInfo.FullName);
+                        }
+                        else
+                        {
+                            if (newHashes.Any())
+                            {
+                                modifiedFilesList.Append("CREATED ==> ").Append(nextFileInfo.FullName).Append(Environment.NewLine);
+                            }
                         }
                     }
 
